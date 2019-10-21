@@ -54,7 +54,10 @@ import Ex1
    Write 'chunk' here: -}
 
 chunk :: Int -> [a] -> [a] -> [[a]]
-chunk = undefined
+chunk x group [] = [reverse group]
+chunk x group (y:ys) 
+                | x /= length group = chunk x ([y] ++ group) ys
+                | x == length group = [reverse group] ++ (chunk x [] (y:ys))
 
 {- 3 MARKS -}
 
@@ -66,7 +69,7 @@ chunk = undefined
 
 chunkProp :: Int -> [Int] -> Property
 chunkProp chunkSize xs =
-  chunkSize > 0 ==> False -- replace "False" here with a real property
+  chunkSize > 0 ==> False --chunk chunkSize [] xs == chunkSize
 
 {- 2 MARKS -}
 
@@ -83,7 +86,10 @@ chunkProp chunkSize xs =
    Do not use 'filter' to write your function. -}
 
 removeEmpties :: [[a]] -> [[a]]
-removeEmpties = undefined
+removeEmpties = undefined 
+--removeEmpties (x:xs) 
+--                | (null x) = removeEmpties xs
+--                | (not null x) = [x] ++ removeEmpties xs
 
 {- 2 MARKS -}
 
@@ -118,7 +124,9 @@ words = undefined
 -}
 
 delete :: Cursor -> Cursor
-delete cursor = undefined
+delete (AtEnd []) = AtEnd []
+delete (Within before point [] ) = AtEnd (before)
+delete (Within before point (a:after)) = (Within before a after)
 
 {- SCHEME: 2 marks for a working definition. Mark off for getting the
    'AtEnd' case wrong. Nothing for implementing backspace. -}
@@ -155,16 +163,18 @@ data Undoable
    to the past. If there is no future, it returns 'Nothing'. -}
 
 now :: Undoable -> Cursor
-now (Undoable past present future) = undefined -- Fill this in
+now (Undoable past present future) = present
 
 update :: Undoable -> Cursor -> Undoable
-update = undefined
+update (Undoable past present future) new = (Undoable past new [])
 
 undo :: Undoable -> Maybe Undoable
-undo = undefined
+undo (Undoable (p:past) present future) = Just (Undoable past p [present])
+undo (Undoable [] present future) = Nothing 
 
 redo :: Undoable -> Maybe Undoable
-redo = undefined
+redo (Undoable past present (f:future)) = Just (Undoable [present] f future)
+redo (Undoable past present []) = Nothing 
 
 {- 6 MARKS -}
 
@@ -181,7 +191,7 @@ redo = undefined
 -}
 
 duplicate :: Process
-duplicate = undefined
+duplicate = Input (Output True (Output True End)) (Output False (Output False End))
 
 {- 1 MARK -}
 
@@ -192,7 +202,8 @@ duplicate = undefined
    'False', and similarly for 'False'->'True'. -}
 
 flipOutputs :: Process -> Process
-flipOutputs = undefined
+flipOutputs (Output b p) = (Output (not b) (flipOutputs p))
+flipOutputs End = End
 
 {- For example,
      process (flipOutputs (outputs [True,False,True])) []  == [False,True,False]
@@ -207,7 +218,7 @@ flipOutputs = undefined
    versa. -}
 
 flipInputs :: Process -> Process
-flipInputs = undefined
+flipInputs p = Input (Output False p) (Output True p)
 
 {- For example,
      process (flipInputs copyCat) [True]  == [False]
@@ -218,4 +229,4 @@ flipInputs = undefined
 
 {----------------------------------------------------------------------}
 {- END OF EXERCISE  (TEST QUESTIONS)                                  -}
-{----------------------------------------------------------------------}
+{---
